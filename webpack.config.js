@@ -25,7 +25,7 @@ module.exports = {
         compress: true,
         hot: true
     },
-    optimization: {
+    optimization: { // 抽离压缩
         minimize: true,
         splitChunks: {
             maxSize: 1000, // 超过3k字节就分块
@@ -83,15 +83,15 @@ module.exports = {
             template: './public/index.html',
             title: 'webpack的html title',
             hash: true, // 引入文件时后面接的etag
-            // minify: {
-                //     removeAttributeQuotes: true,
-                //     collapseWhitespace: true
-                // }
+            minify: { // html压缩
+                    removeAttributeQuotes: process.env.ENV === 'production',
+                    collapseWhitespace: process.env.ENV === 'production'
+                }
             }),
-        // new ExtractTextWebpackPlugin({
+        // new ExtractTextWebpackPlugin({ // webpack版本不兼容问题  暂不使用
         //     filename: 'css/index.css'
         // }),
-        new MiniCssExtractPlugin({
+        new MiniCssExtractPlugin({  // 只能多个css抽离为一个css文件  大型项目时可配置webpack按需加载抽离css文件
             filename: 'css/[name].css',
             chunkFilename: '[id].css'
         }),
@@ -101,13 +101,13 @@ module.exports = {
                 to: path.join(__dirname, '/build/static/')
             }
         ]),
-        new OptimizeCssAssetsPlugin({
+        new OptimizeCssAssetsPlugin({   // 压缩css文件
             cssProcessor: require('cssnano'),
             cssProcessorOptions: {
                 discardComments: {
                     removeAll: true,
                 },
-                canPrint: true
+                canPrint: true, // 控制台打印插件信息
             }
         }),
     ],
