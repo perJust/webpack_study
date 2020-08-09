@@ -9,7 +9,8 @@ let MiniCssExtractPlugin = require('mini-css-extract-plugin');
 let CopyWebpackPlugin = require('copy-webpack-plugin');
 let OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 let UglifyjsWebpackPlugin = require('uglifyjs-webpack-plugin');
-let TerserWebpackPlugin = require('terser-webpack-plugin');
+let TerserWebpackPlugin = require('terser-webpack-plugin'); // 压缩js
+let Uglify = require('uglify-es'); // 压缩拷贝的js文件
 
 module.exports = {
     mode: process.env.ENV === 'production'?'production':'development',    // 更改模式
@@ -28,22 +29,23 @@ module.exports = {
     optimization: { // 抽离压缩
         minimize: true,
         splitChunks: {
-            maxSize: 1000, // 超过3k字节就分块
+            maxSize: 3000, // 超过3k字节就分块,
+            minSize: 1000, // 生成块的最小大小
         },
-        minimizer:[
+        minimizer:[ // minimizer表示可以用第三方插件进行压缩
             new UglifyjsWebpackPlugin({ // 这个插件需要在webpack Mode='production'时生效
                 uglifyOptions: {
                     output: {
                         comments: false
                     },
+                    warnings: false,
                     compress: {
-                        warnings: false,
                         drop_debugger: true,
                         drop_console: true
                     }
                 },
                 sourceMap: false
-            })
+            }),
         ]
         // minimizer: [
         //     // new TerserWebpackPlugin({
@@ -98,7 +100,16 @@ module.exports = {
         new CopyWebpackPlugin([
             { 
                 from: path.join(__dirname, '/static'),
-                to: path.join(__dirname, '/build/static/')
+                to: path.join(__dirname, '/build/static/'),
+                transform: function (content) { // Allows to modify the file contents.
+                    let options = {
+                        compress: {
+                            warnings: false, // warnings 假如压缩失败 显示警告
+                            drop_console: true, // 去除console
+                        }
+                    };
+                    return Uglify.minify(content.toString(), options).code;
+                }
             }
         ]),
         new OptimizeCssAssetsPlugin({   // 压缩css文件

@@ -1,1 +1,2 @@
-console.log('worker01')
+console.log('worker01');
+self.postMessage('msg', 'worker01');
